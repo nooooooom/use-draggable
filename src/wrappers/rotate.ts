@@ -9,7 +9,7 @@ function getRadiansBetween(p: Position, q: Position) {
 
 export function rotateWrapper(
   center: MaybeRef<Position>,
-  interval = 15
+  interval = 1
 ): Wrapper<number> {
   let initRadians: number
   return {

@@ -1,7 +1,7 @@
 {
   "name": "@nooooooom/use-draggable",
   "version": "1.0.0",
-  "description": "",
+  "description": "A Vue hook that combines some common logic for dragging.",
   "license": "MIT",
   "keywords": [
     "vue-hooks",
@@ -9,6 +9,11 @@
     "drag",
     "draggable"
   ],
+  "homepage": "https://github.com/nooooooom/use-draggable#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nooooooom/use-draggable"
+  },
   "author": "nooooooom",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
