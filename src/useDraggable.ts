@@ -81,7 +81,7 @@ export interface UseDraggableOptions<T extends Wrapper = Wrapper>
 
 export function useDraggable(
   /**
-   * event-started region - @default Document
+   * event-started listener region - @default Document
    */
   container: MaybeRef<Container | null>,
   options: UseDraggableOptions
