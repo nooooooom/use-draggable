@@ -115,7 +115,7 @@ useDraggable(boxEl, {
 
 So you can extract the core core logic and reuse it elsewhere.
 
-`use-draggable` has some interesting built-in wrappers, such as `rotateWrapper`
+`use-draggable` has some interesting built-in wrappers, such as `rotateWrapper`.
 
 Some options of `rotateWrapper` can be found in the [source code](https://github.com/nooooooom/use-draggable/blob/main/src/wrappers/rotate.ts).
 
@@ -143,6 +143,8 @@ Separating the logic of operations can help us better troubleshoot problems in o
 ## Feature
 
 I'll keep populating some interesting built-in wrappers, I've enjoyed developing them, and I think they'll help draggable do a lot of interesting things.
+  
+![NT5AC(NZXG~Q(3CJ5@ OS2Q](https://user-images.githubusercontent.com/61452855/155855685-adcf6acb-ff97-4c95-a11b-e45eeddcc2d7.gif)
 
 ## License
 
