@@ -3,7 +3,7 @@ import { ref, unref } from 'vue-demi'
 import { createMouseMoveActionsApi } from './createMouseMoveActionsApi'
 import type { TouchyEvent, PointerType } from './createMouseMoveActionsApi'
 
-type MaybeRef<T> = T | Ref<T>
+export type MaybeRef<T> = T | Ref<T>
 
 export interface Position {
   x: number
@@ -54,10 +54,10 @@ export interface UseDraggableOptions<T extends Wrapper = Wrapper>
    *
    * @example
    * ```ts
-   * // Hopefully #knobs on #header trigger draggable
+   * // Hopefully #knobs on #header started
    * useDraggable('#header', { ..., containers: ['#knobs'] })
    *
-   * // Or do not want the right button to trigger
+   * // Or do not want the right button to started
    * useDraggable('#header', { ..., containers: ({ button }) => button !== 2 })
    * ```
    */

@@ -1,10 +1,11 @@
 {
-  "name": "use-draggable",
+  "name": "@nooooooom/use-draggable",
   "version": "1.0.0",
   "description": "",
   "license": "MIT",
   "keywords": [
     "vue-hooks",
+    "vue2-hooks",
     "drag",
     "draggable"
   ],
@@ -23,7 +24,8 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "test": "vitest run"
+    "test": "vitest run",
+    "release": "npm run build & npm publish"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
