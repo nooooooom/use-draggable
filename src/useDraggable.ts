@@ -52,7 +52,7 @@ export type Target = string /** Selector */ | DragStartTarget
 export interface UseDraggableOptions<T extends Wrapper = Wrapper>
   extends MouseMoveActions<ExtractWrapped<T>, void> {
   /**
-   * Element to attach `pointermove` and `pointerup` events to.
+   * Element to attach `TouchMove` and `TouchEnd` events to.
    *
    * @default window
    */
@@ -67,15 +67,18 @@ export interface UseDraggableOptions<T extends Wrapper = Wrapper>
    * @example
    * ```ts
    * // Hopefully #knobs on #header started
-   * useDraggable('#header', { ..., containers: ['#knobs'] })
+   * useDraggable('#header', { ..., contains: ['#knobs'] })
    *
    * // Or do not want the right button to started
-   * useDraggable('#header', { ..., containers: ({ button }) => button !== 2 })
+   * useDraggable('#header', { ..., contains: ({ button }) => button !== 2 })
    * ```
    */
-  containers?:
+  contains?:
     | NonNullable<DragStartTarget>[]
-    | ((container: NonNullable<DragStartTarget>, event: TouchyEvent) => boolean)
+    | ((
+        target: NonNullable<DragStartTarget> /** Element to which the `TouchStart` is bound */,
+        event: TouchyEvent
+      ) => boolean)
 
   /**
    * Specifies the pointer event type to use - @default ['mouse' | 'pen' | 'touch']
@@ -93,7 +96,7 @@ export interface UseDraggableOptions<T extends Wrapper = Wrapper>
 
 export function useDraggable(
   /**
-   * event-started listener region - @default Document
+   * event-started listener region - @default undefined
    */
   target: MaybeRef<Target>,
   options: UseDraggableOptions
@@ -113,24 +116,22 @@ export function useDraggable(
     }
   }
 
-  const { draggingTarget, containers, wrapper, onStart, onMove, onEnd } =
-    options
+  const { draggingTarget, contains, wrapper, onStart, onMove, onEnd } = options
 
-  const containersIsArray = Array.isArray(containers)
+  const containsIsArray = Array.isArray(contains)
   const allowTouchStart =
-    !containers || (containersIsArray && !containers.length)
+    !contains || (containsIsArray && !contains.length)
       ? () => true // always
-      : containersIsArray
+      : containsIsArray
       ? // Which I find more useful than the form of `exclude`,
         // because there are not many elements that usually trigger drag
         (event: TouchyEvent) => {
           const { target } = event
-          return containers.some((c) => normalizeTarget(c) === target)
+          return contains.some((c) => normalizeTarget(c) === target)
         }
       : // If you want to exclude some specific factors, a Function may be more suitable,
         // because it gets the new context value and re-executes
-        (event: TouchyEvent) =>
-          containers(normalizeTarget(unref(target))!, event)
+        (event: TouchyEvent) => contains(normalizeTarget(unref(target))!, event)
 
   const onTouchStart = (event: TouchyEvent) => {
     if (!allowTouchStart(event)) {

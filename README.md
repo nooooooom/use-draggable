@@ -14,16 +14,16 @@ pnpm install @nooooooom/use-draggable --save-dev
 
 ## Options
 
-| Option        | Type                                                                                            | Description                                                                                                | Default   |
-| ------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------- |
-| defaultWindow | Window                                                                                          | Window to bind `TouchMove` event, If undefined , it will get the window where the `container` is located。 | Window    |
-| container     | MaybeRef<HTMLElement &#124; string &#124; null>                                                 | `TouchStart` listener region.                                                                              | Document  |
-| containers    | Array<HTMLElement &#124; string> &#124; (container: HTMLElement, event: TouchyEvent) => boolean | Determine whether draggable should be started by whom.                                                     | undefined |
-| pointerTypes  | ['mouse' &#124; 'pen' &#124; 'touch']                                                           | Specifies the pointer event type to use.                                                                   | undefined |
-| wrapper       | Wrapper                                                                                         | Use wrapper to control the final output data.                                                              | undefined |
-| onStart       | (event: TouchyEvent, position: MoveActionPosition, params: unknown) => void                     | A callback receiving the `TouchDown`.                                                                      | undefined |
-| onMove        | (event: TouchyEvent, position: MoveActionPosition, params: unknown) => void                     | A callback receiving the `TouchMove`.                                                                      | undefined |
-| onEnd         | (event: TouchyEvent, position: MoveActionPosition, params: unknown) => void                     | A callback receiving the `TouchEnd`.                                                                       | undefined |
+| Option         | Type                                                                                                                                                          | Description                                                                                                                  | Default                               |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| target         | MaybeRef<HTMLElement &#124; SVGElement &#124; Document &#124; string &#124; null>                                                                             | `TouchStart` listener region.                                                                                                | undefined                             |
+| draggingTarget | HTMLElement &#124; SVGElement &#124; Window &#124; Document &#124; null                                                                                       | Element to attach `TouchMove` and `TouchEnd` events to, If undefined , it will get the window where the `target` is located. | Window                                |
+| contains       | Array<HTMLElement &#124; SVGElement &#124; Document &#124; string> &#124; (target: Element to which the `TouchStart` is bound, event: TouchyEvent) => boolean | Determine whether draggable should be started by whom.                                                                       | undefined                             |
+| pointerTypes   | ['mouse' &#124; 'pen' &#124; 'touch']                                                                                                                         | Specifies the pointer event type to use.                                                                                     | ['mouse' &#124; 'pen' &#124; 'touch'] |
+| wrapper        | Wrapper                                                                                                                                                       | Use wrapper to control the final output data.                                                                                | undefined                             |
+| onStart        | (event: TouchyEvent, position: MoveActionPosition, params: unknown) => void                                                                                   | A callback receiving the `TouchStart`.                                                                                        | undefined                             |
+| onMove         | (event: TouchyEvent, position: MoveActionPosition, params: unknown) => void                                                                                   | A callback receiving the `TouchMove`.                                                                                        | undefined                             |
+| onEnd          | (event: TouchyEvent, position: MoveActionPosition, params: unknown) => void                                                                                   | A callback receiving the `TouchEnd`.                                                                                         | undefined                             |
 
 ## Response
 
@@ -133,7 +133,7 @@ useDraggable(boxEl, {
   ),
   onMove: (event, position, incrementAngle) => {
     // Now the `box` will rotate around its own center.
-    boxEl.style.transform = `rotateZ(${(currentAngle + incrementAngle)}deg)`
+    boxEl.style.transform = `rotateZ(${currentAngle + incrementAngle}deg)`
   },
   onEnd: (event, position, incrementAngle) => {
     currentAngle += incrementAngle
@@ -146,7 +146,7 @@ Separating the logic of operations can help us better troubleshoot problems in o
 ## Feature
 
 I'll keep populating some interesting built-in wrappers, I've enjoyed developing them, and I think they'll help draggable do a lot of interesting things.
-  
+
 ![NT5AC(NZXG~Q(3CJ5@ OS2Q](https://user-images.githubusercontent.com/61452855/155855685-adcf6acb-ff97-4c95-a11b-e45eeddcc2d7.gif)
 
 ## License
