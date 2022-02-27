@@ -9,21 +9,30 @@ function getRadiansBetween(p: Position, q: Position) {
 
 export function rotateWrapper(
   center: MaybeRef<Position>,
-  interval = 1
+  interval: MaybeRef<number> = 1
 ): Wrapper<number> {
   let initRadians: number
+
+  const getIncrementAngle = (position: Position) => {
+    const rawCenter = unref(center)
+    const rawInterval = unref(interval)
+
+    const currentRadians = getRadiansBetween(position, rawCenter)
+    const diffAngle = (currentRadians - initRadians) * PRE_RADIANS
+
+    const incrementAngle = Math.floor(diffAngle / rawInterval) * rawInterval
+
+    return Math.floor(
+      incrementAngle < 0 ? incrementAngle + 360 : incrementAngle
+    )
+  }
+
   return {
     onStart: (event, position) => {
       initRadians = getRadiansBetween(position, unref(center))
       return 0
     },
-    onMove: (event, position) => {
-      const currentRadians = getRadiansBetween(position, unref(center))
-      const diffAngle = (currentRadians - initRadians) * PRE_RADIANS
-      const incrementAngle = Math.floor(diffAngle / interval) * interval
-      return Math.floor(
-        incrementAngle < 0 ? incrementAngle + 360 : incrementAngle
-      )
-    }
+    onMove: (event, position) => getIncrementAngle(position),
+    onEnd: (event, position) => getIncrementAngle(position)
   }
 }

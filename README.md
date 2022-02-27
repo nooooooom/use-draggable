@@ -133,7 +133,10 @@ useDraggable(boxEl, {
   ),
   onMove: (event, position, incrementAngle) => {
     // Now the `box` will rotate around its own center.
-    boxEl.style.transform = `rotateZ(${(currentAngle += incrementAngle)})`
+    boxEl.style.transform = `rotateZ(${(currentAngle + incrementAngle)}deg)`
+  },
+  onEnd: (event, position, incrementAngle) => {
+    currentAngle += incrementAngle
   }
 })
 ```
