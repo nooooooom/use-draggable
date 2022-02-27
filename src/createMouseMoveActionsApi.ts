@@ -45,12 +45,31 @@ function getMoveEvents() {
   return window.navigator.pointerEnabled ? [pointers] : [mouse, touch]
 }
 
+export interface MouseMoveActionsApi {
+  unsetup: () => void
+  registerMoveEvent: () => void
+  turnOffMoveEvents: () => void
+}
+
+const emptyMouseMoveActionApi: MouseMoveActionsApi = {
+  unsetup: () => {},
+  registerMoveEvent: () => {},
+  turnOffMoveEvents: () => {}
+} as const
+
+export type DragStartTarget = HTMLElement | SVGElement | Document | null
+
+export type DraggingTarget = HTMLElement | SVGElement | Window | Document | null
+
+export type SetupMouseMoveActionsApi = (
+  target: DragStartTarget,
+  draggingTarget?: DraggingTarget
+) => MouseMoveActionsApi
+
 export function createMouseMoveActionsApi(
-  target: HTMLElement,
   types: PointerType[] | undefined,
-  actions: MouseActionHandles,
-  defaultWindow: Window = window
-) {
+  actions: MouseActionHandles
+): SetupMouseMoveActionsApi {
   const { onStart, onMove, onEnd } = actions
 
   const filterEvent = (event: TouchyEvent) => {
@@ -77,31 +96,47 @@ export function createMouseMoveActionsApi(
 
   const Events = getMoveEvents()
 
-  // TODO it looks bad
-  return {
-    setup: () => {
-      Events.forEach((evet) =>
-        target.addEventListener(evet.start, onPointerDown as any)
-      )
-    },
-    unsetup: () => {
-      Events.forEach((evet) => {
-        target.removeEventListener(evet.start, onPointerDown as any)
-        defaultWindow.removeEventListener(evet.move, onPointerMove as any)
-        defaultWindow.removeEventListener(evet.end, onPointerMove as any)
-      })
-    },
-    registerMoveEvent: () => {
-      Events.forEach((evet) => {
-        defaultWindow.addEventListener(evet.move, onPointerMove as any)
-        defaultWindow.addEventListener(evet.end, onPointerUp as any)
-      })
-    },
-    turnOffMoveEvents: () => {
-      Events.forEach((evet) => {
-        defaultWindow.removeEventListener(evet.move, onPointerMove as any)
-        defaultWindow.removeEventListener(evet.end, onPointerMove as any)
-      })
+  const setup: SetupMouseMoveActionsApi = (target, draggingTarget) => {
+    if (!target) {
+      return emptyMouseMoveActionApi
+    }
+
+    const draggingElement = draggingTarget ?? getDefaultWindow(target)
+
+    Events.forEach((evet) =>
+      target.addEventListener(evet.start, onPointerDown as any)
+    )
+
+    return {
+      unsetup: () => {
+        Events.forEach((evet) => {
+          target.removeEventListener(evet.start, onPointerDown as any)
+          draggingElement.removeEventListener(evet.move, onPointerMove as any)
+          draggingElement.removeEventListener(evet.end, onPointerMove as any)
+        })
+      },
+      registerMoveEvent: () => {
+        Events.forEach((evet) => {
+          draggingElement.addEventListener(evet.move, onPointerMove as any)
+          draggingElement.addEventListener(evet.end, onPointerUp as any)
+        })
+      },
+      turnOffMoveEvents: () => {
+        Events.forEach((evet) => {
+          draggingElement.removeEventListener(evet.move, onPointerMove as any)
+          draggingElement.removeEventListener(evet.end, onPointerMove as any)
+        })
+      }
     }
   }
+
+  return setup
+}
+
+function getDefaultWindow(target: any) {
+  if (!target) {
+    return window
+  }
+  const ownerDocument = target.ownerDocument
+  return ownerDocument?.defaultView || window
 }

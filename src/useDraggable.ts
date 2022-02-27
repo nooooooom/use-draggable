@@ -1,7 +1,13 @@
 import type { Ref } from 'vue-demi'
-import { ref, unref } from 'vue-demi'
+import { ref, unref, watch } from 'vue-demi'
 import { createMouseMoveActionsApi } from './createMouseMoveActionsApi'
-import type { TouchyEvent, PointerType } from './createMouseMoveActionsApi'
+import type {
+  TouchyEvent,
+  PointerType,
+  MouseMoveActionsApi,
+  DragStartTarget,
+  DraggingTarget
+} from './createMouseMoveActionsApi'
 
 export type MaybeRef<T> = T | Ref<T>
 
@@ -41,11 +47,17 @@ export interface Wrapper<T = unknown> extends MouseMoveActions<void, T> {}
 
 export type ExtractWrapped<T> = T extends Wrapper<infer T> ? T : never
 
-export type Container = string /** Selector */ | HTMLElement
+export type Target = string /** Selector */ | DragStartTarget
 
 export interface UseDraggableOptions<T extends Wrapper = Wrapper>
   extends MouseMoveActions<ExtractWrapped<T>, void> {
-  defaultWindow?: Window
+  /**
+   * Element to attach `pointermove` and `pointerup` events to.
+   *
+   * @default window
+   */
+  draggingTarget?: MaybeRef<DraggingTarget>
+
   /**
    * Determine whether draggable should be started by whom,
    * or whether it should be started at this time
@@ -62,8 +74,8 @@ export interface UseDraggableOptions<T extends Wrapper = Wrapper>
    * ```
    */
   containers?:
-    | Container[]
-    | ((container: HTMLElement, event: TouchyEvent) => boolean)
+    | NonNullable<DragStartTarget>[]
+    | ((container: NonNullable<DragStartTarget>, event: TouchyEvent) => boolean)
 
   /**
    * Specifies the pointer event type to use - @default ['mouse' | 'pen' | 'touch']
@@ -83,11 +95,9 @@ export function useDraggable(
   /**
    * event-started listener region - @default Document
    */
-  container: MaybeRef<Container | null>,
+  target: MaybeRef<Target>,
   options: UseDraggableOptions
 ) {
-  const dragContainer = normalizeContainer(unref(container)) ?? document
-
   const draggingRef = ref(false)
   const positionRef = ref<Position>()
 
@@ -103,7 +113,8 @@ export function useDraggable(
     }
   }
 
-  const { containers, wrapper, onStart, onMove, onEnd } = options
+  const { draggingTarget, containers, wrapper, onStart, onMove, onEnd } =
+    options
 
   const containersIsArray = Array.isArray(containers)
   const allowTouchStart =
@@ -114,19 +125,12 @@ export function useDraggable(
         // because there are not many elements that usually trigger drag
         (event: TouchyEvent) => {
           const { target } = event
-          return containers.some(
-            (container) => normalizeContainer(container) === target
-          )
+          return containers.some((c) => normalizeTarget(c) === target)
         }
       : // If you want to exclude some specific factors, a Function may be more suitable,
         // because it gets the new context value and re-executes
         (event: TouchyEvent) =>
-          containers(
-            isDocument(dragContainer)
-              ? document.documentElement
-              : dragContainer,
-            event
-          )
+          containers(normalizeTarget(unref(target))!, event)
 
   const onTouchStart = (event: TouchyEvent) => {
     if (!allowTouchStart(event)) {
@@ -134,7 +138,7 @@ export function useDraggable(
     }
 
     draggingRef.value = true
-    moveActionsApi.registerMoveEvent()
+    mouseMoveActionsApi.registerMoveEvent()
 
     const mousePosition = (initPosition = getMousePotision(event))
     positionRef.value = mousePosition
@@ -161,7 +165,7 @@ export function useDraggable(
 
   const onTouchEnd = (event: TouchyEvent) => {
     draggingRef.value = false
-    moveActionsApi.turnOffMoveEvents()
+    mouseMoveActionsApi.turnOffMoveEvents()
 
     const mouseActionPosition = getMoveActionPosition(positionRef.value!)
     const wrapperParams = wrapper?.onEnd?.(event, mouseActionPosition)
@@ -169,46 +173,43 @@ export function useDraggable(
     onEnd?.(event, mouseActionPosition, wrapperParams)
   }
 
-  const moveActionsApi = createMouseMoveActionsApi(
-    dragContainer as HTMLElement,
-    options.pointerTypes,
-    {
-      onStart: onTouchStart,
-      onMove: onTouchMove,
-      onEnd: onTouchEnd
-    },
-    options.defaultWindow || getDefaultWindow(dragContainer)
-  )
+  const setupMuoseMoveAction = createMouseMoveActionsApi(options.pointerTypes, {
+    onStart: onTouchStart,
+    onMove: onTouchMove,
+    onEnd: onTouchEnd
+  })
 
-  if (dragContainer) {
-    moveActionsApi.setup()
-  }
+  let mouseMoveActionsApi: MouseMoveActionsApi
+
+  watch(
+    [() => unref(target), () => unref(draggingTarget)],
+    ([target, draggingTarget]) => {
+      if (mouseMoveActionsApi) {
+        mouseMoveActionsApi.unsetup()
+      }
+      mouseMoveActionsApi = setupMuoseMoveAction(
+        normalizeTarget(target),
+        draggingTarget
+      )
+    },
+    {
+      immediate: true,
+      flush: 'post'
+    }
+  )
 
   return {
     position: positionRef,
     dragging: draggingRef,
     turnOff: () => {
-      moveActionsApi.unsetup()
+      mouseMoveActionsApi.unsetup()
     }
   }
 }
 
-function normalizeContainer(target: Container | null): HTMLElement | null {
+function normalizeTarget(target: Target | null): DragStartTarget | null {
   if (typeof target === 'string') {
-    return document.querySelector(target)
+    return document.querySelector<HTMLElement>(target)
   }
   return target
-}
-
-function getDefaultWindow(target?: Node) {
-  if (!target) {
-    return window
-  }
-  const ownerDocument = target.ownerDocument
-  return ownerDocument?.defaultView || window
-}
-
-function isDocument(target: any): target is Document {
-  const ownerWindow = getDefaultWindow(target)
-  return target instanceof ownerWindow.Document
 }
