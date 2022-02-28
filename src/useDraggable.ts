@@ -1,4 +1,4 @@
-import type { Ref } from 'vue-demi'
+import { computed, Ref } from 'vue-demi'
 import { ref, unref, watch } from 'vue-demi'
 import { createMouseMoveActionsApi } from './createMouseMoveActionsApi'
 import type {
@@ -43,14 +43,21 @@ function getMousePotision(event: TouchyEvent): Position {
   }
 }
 
-export interface Wrapper<T = unknown> extends MouseMoveActions<void, T> {}
+export interface Wrapper<T = void> extends MouseMoveActions<void, T> {}
 
 export type ExtractWrapped<T> = T extends Wrapper<infer T> ? T : never
 
 export type Target = string /** Selector */ | DragStartTarget
 
-export interface UseDraggableOptions<T extends Wrapper = Wrapper>
+export interface UseDraggableOptions<T>
   extends MouseMoveActions<ExtractWrapped<T>, void> {
+  /**
+   * Initial position of the pointer.
+   *
+   * @default { x: 0, y: 0 }
+   */
+  initialPostiion?: MaybeRef<Position>
+
   /**
    * Element to attach `TouchMove` and `TouchEnd` events to.
    *
@@ -94,27 +101,27 @@ export interface UseDraggableOptions<T extends Wrapper = Wrapper>
   wrapper?: T
 }
 
+export function useDraggable<T extends Wrapper<void>>(
+  target: MaybeRef<Target>,
+  options?: UseDraggableOptions<T>
+): UseDraggableReturn
+
 export function useDraggable(
+  target: MaybeRef<Target>,
+  options?: UseDraggableOptions<{}>
+): UseDraggableReturn
+
+export function useDraggable<T extends Wrapper<any>>(
   /**
    * event-started listener region - @default undefined
    */
   target: MaybeRef<Target>,
-  options: UseDraggableOptions
-) {
-  const draggingRef = ref(false)
-  const positionRef = ref<Position>()
-
-  let initPosition: Position
-
-  const getMoveActionPosition = (mousePosition: Position) => {
-    return {
-      ...mousePosition,
-      diff: {
-        x: mousePosition.x - initPosition.x,
-        y: mousePosition.y - initPosition.y
-      }
-    }
-  }
+  options: UseDraggableOptions<T> = {}
+): UseDraggableReturn {
+  const targetRef = computed(() => normalizeTarget(unref(target)))
+  const positionRef: Ref<Position> = ref(
+    options.initialPostiion || { x: 0, y: 0 }
+  )
 
   const { draggingTarget, contains, wrapper, onStart, onMove, onEnd } = options
 
@@ -131,7 +138,20 @@ export function useDraggable(
         }
       : // If you want to exclude some specific factors, a Function may be more suitable,
         // because it gets the new context value and re-executes
-        (event: TouchyEvent) => contains(normalizeTarget(unref(target))!, event)
+        (event: TouchyEvent) => contains(targetRef.value!, event)
+
+  const draggingRef = ref(false)
+  let initPosition: Position
+
+  const getMoveActionPosition = (mousePosition: Position) => {
+    return {
+      ...mousePosition,
+      diff: {
+        x: mousePosition.x - initPosition.x,
+        y: mousePosition.y - initPosition.y
+      }
+    }
+  }
 
   const onTouchStart = (event: TouchyEvent) => {
     if (!allowTouchStart(event)) {
@@ -145,9 +165,9 @@ export function useDraggable(
     positionRef.value = mousePosition
 
     const mouseActionPosition = getMoveActionPosition(mousePosition)
-    const wrapperParams = wrapper?.onStart?.(event, mouseActionPosition)
+    const wrapped = wrapper?.onStart?.(event, mouseActionPosition)
 
-    onStart?.(event, mouseActionPosition, wrapperParams)
+    onStart?.(event, mouseActionPosition, wrapped)
   }
 
   const onTouchMove = (event: TouchyEvent) => {
@@ -159,9 +179,9 @@ export function useDraggable(
     positionRef.value = mousePosition
 
     const mouseActionPosition = getMoveActionPosition(mousePosition)
-    const wrapperParams = wrapper?.onMove?.(event, mouseActionPosition)
+    const wrapped = wrapper?.onMove?.(event, mouseActionPosition)
 
-    onMove?.(event, mouseActionPosition, wrapperParams)
+    onMove?.(event, mouseActionPosition, wrapped)
   }
 
   const onTouchEnd = (event: TouchyEvent) => {
@@ -169,9 +189,9 @@ export function useDraggable(
     mouseMoveActionsApi.turnOffMoveEvents()
 
     const mouseActionPosition = getMoveActionPosition(positionRef.value!)
-    const wrapperParams = wrapper?.onEnd?.(event, mouseActionPosition)
+    const wrapped = wrapper?.onEnd?.(event, mouseActionPosition)
 
-    onEnd?.(event, mouseActionPosition, wrapperParams)
+    onEnd?.(event, mouseActionPosition, wrapped)
   }
 
   const setupMuoseMoveAction = createMouseMoveActionsApi(options.pointerTypes, {
@@ -182,12 +202,10 @@ export function useDraggable(
 
   let mouseMoveActionsApi: MouseMoveActionsApi
 
-  watch(
-    [() => unref(target), () => unref(draggingTarget)],
+  const stopWatch = watch(
+    [targetRef, () => unref(draggingTarget)],
     ([target, draggingTarget]) => {
-      if (mouseMoveActionsApi) {
-        mouseMoveActionsApi.unsetup()
-      }
+      mouseMoveActionsApi?.unsetup()
       mouseMoveActionsApi = setupMuoseMoveAction(
         normalizeTarget(target),
         draggingTarget
@@ -203,9 +221,16 @@ export function useDraggable(
     position: positionRef,
     dragging: draggingRef,
     turnOff: () => {
-      mouseMoveActionsApi.unsetup()
+      mouseMoveActionsApi?.unsetup()
+      stopWatch()
     }
   }
+}
+
+type UseDraggableReturn = {
+  position: Ref<Position>
+  dragging: Ref<boolean>
+  turnOff: () => void
 }
 
 function normalizeTarget(target: Target | null): DragStartTarget | null {
