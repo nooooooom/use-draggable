@@ -81,10 +81,10 @@ export interface UseDraggableOptions<T>
    * ```
    */
   contains?:
-    | NonNullable<DragStartTarget>[]
+    | NonNullable<Target>[]
     | ((
-        target: NonNullable<DragStartTarget> /** Element to which the `TouchStart` is bound */,
-        event: TouchyEvent
+        event: TouchyEvent,
+        target: NonNullable<Target> /** Element to which the `TouchStart` is bound */
       ) => boolean)
 
   /**
@@ -119,30 +119,29 @@ export function useDraggable<T extends Wrapper<any>>(
   options: UseDraggableOptions<T> = {}
 ): UseDraggableReturn {
   const targetRef = computed(() => normalizeTarget(unref(target)))
+  const draggingRef = ref(false)
   const positionRef: Ref<Position> = ref(
     options.initialPostiion || { x: 0, y: 0 }
   )
 
   const { draggingTarget, contains, wrapper, onStart, onMove, onEnd } = options
 
-  const containsIsArray = Array.isArray(contains)
-  const allowTouchStart =
-    !contains || (containsIsArray && !contains.length)
-      ? () => true // always
-      : containsIsArray
-      ? // Which I find more useful than the form of `exclude`,
-        // because there are not many elements that usually trigger drag
-        (event: TouchyEvent) => {
-          const { target } = event
-          return contains.some((c) => normalizeTarget(c) === target)
-        }
-      : // If you want to exclude some specific factors, a Function may be more suitable,
-        // because it gets the new context value and re-executes
-        (event: TouchyEvent) => contains(targetRef.value!, event)
+  const allowTouchStart = !contains
+    ? () => true // always
+    : Array.isArray(contains)
+    ? // Which I find more useful than the form of `exclude`,
+      // because there are not many elements that usually trigger drag
+      (event: TouchyEvent) => {
+        const { target } = event
+        return (
+          target && contains.some((c) => matchesTarget(target as Element, c))
+        )
+      }
+    : // If you want to exclude some specific factors, a Function may be more suitable,
+      // because it gets the new context value and re-executes
+      (event: TouchyEvent) => contains(event, targetRef.value!)
 
-  const draggingRef = ref(false)
   let initPosition: Position
-
   const getMoveActionPosition = (mousePosition: Position) => {
     return {
       ...mousePosition,
@@ -194,7 +193,7 @@ export function useDraggable<T extends Wrapper<any>>(
     onEnd?.(event, mouseActionPosition, wrapped)
   }
 
-  const setupMuoseMoveAction = createMouseMoveActionsApi(options.pointerTypes, {
+  const setupMouseMoveAction = createMouseMoveActionsApi(options.pointerTypes, {
     onStart: onTouchStart,
     onMove: onTouchMove,
     onEnd: onTouchEnd
@@ -206,7 +205,7 @@ export function useDraggable<T extends Wrapper<any>>(
     [targetRef, () => unref(draggingTarget)],
     ([target, draggingTarget]) => {
       mouseMoveActionsApi?.unsetup()
-      mouseMoveActionsApi = setupMuoseMoveAction(
+      mouseMoveActionsApi = setupMouseMoveAction(
         normalizeTarget(target),
         draggingTarget
       )
@@ -238,4 +237,11 @@ function normalizeTarget(target: Target | null): DragStartTarget | null {
     return document.querySelector<HTMLElement>(target)
   }
   return target
+}
+
+function matchesTarget(target: Element, selectorOrElement: Target) {
+  if (typeof selectorOrElement === 'string') {
+    return target.matches(selectorOrElement)
+  }
+  return target === selectorOrElement
 }

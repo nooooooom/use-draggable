@@ -1,7 +1,7 @@
 import { unref } from 'vue-demi'
 import type { MaybeRef, Position, Wrapper } from '../useDraggable'
 
-const PRE_RADIANS = 180 / Math.PI
+const PER_RADIANS = 180 / Math.PI
 
 function getRadiansBetween(p: Position, q: Position) {
   return Math.atan2(p.y - q.y, p.x - q.x)
@@ -18,7 +18,7 @@ export function rotateWrapper(
     const rawInterval = unref(interval)
 
     const currentRadians = getRadiansBetween(position, rawCenter)
-    const diffAngle = (currentRadians - initRadians) * PRE_RADIANS
+    const diffAngle = (currentRadians - initRadians) * PER_RADIANS
 
     const incrementAngle = Math.floor(diffAngle / rawInterval) * rawInterval
 
