@@ -1,6 +1,6 @@
 {
   "name": "@nooooooom/use-draggable",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A Vue hook that combines some common logic for dragging.",
   "license": "MIT",
   "keywords": [
@@ -14,14 +14,23 @@
     "url": "git+https://github.com/nooooooom/use-draggable"
   },
   "author": "nooooooom",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
     },
-    "./*": "./*"
+    "./*": "./*",
+    "./wrappers": {
+      "import": "./dist/wrappers.mjs",
+      "require": "./dist/wrappers.cjs"
+    },
+    "./createMouseMoveActionsApi": {
+      "import": "./dist/createMouseMoveActionsApi.mjs",
+      "require": "./dist/createMouseMoveActionsApi.cjs"
+    }
   },
   "files": [
     "dist"

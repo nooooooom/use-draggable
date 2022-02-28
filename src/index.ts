@@ -1,4 +1,2 @@
-export * from './createMouseMoveActionsApi'
-export * from './useDraggable'
-
-export * from './wrappers'
+export * from './core/useDraggable'
+export { default } from './core/useDraggable'
