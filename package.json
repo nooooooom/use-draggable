@@ -1,5 +1,5 @@
 {
-  "name": "@moon/use-draggable",
+  "name": "@reasoning/use-draggable",
   "version": "1.0.0",
   "description": "A Vue hook that combines some common logic for dragging.",
   "license": "MIT",
@@ -12,6 +12,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nooooooom/use-draggable"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "author": "nooooooom",
   "main": "dist/index.cjs",
