@@ -1,13 +1,13 @@
 import type { Ref } from 'vue-demi'
 import { ref, unref, watch, computed } from 'vue-demi'
-import { createMouseMoveActionsApi } from './helpers/createMouseMoveActionsApi'
+import { createMouseMoveActionsApi } from './utils/createMouseMoveActionsApi'
 import type {
   TouchyEvent,
   PointerType,
   MouseMoveActionsApi,
   DragStartTarget,
   DraggingTarget
-} from './helpers/createMouseMoveActionsApi'
+} from './utils/createMouseMoveActionsApi'
 
 export type MaybeRef<T> = T | Ref<T>
 
@@ -29,21 +29,7 @@ export interface MouseMoveActions<P = unknown, T = unknown> {
   onEnd?: (event: TouchyEvent, position: MoveActionPosition, params: P) => T
 }
 
-function getMousePotision(event: TouchyEvent): Position {
-  if ('touches' in event) {
-    const touch = event.touches[0]
-    return {
-      x: touch.pageX,
-      y: touch.pageY
-    }
-  }
-  return {
-    x: event.pageX,
-    y: event.pageY
-  }
-}
-
-export interface Wrapper<T = void> extends MouseMoveActions<void, T> {}
+export interface Wrapper<T = any, P = any> extends MouseMoveActions<P, T> {}
 
 export type ExtractWrapped<T> = T extends Wrapper<infer T> ? T : never
 
@@ -101,17 +87,7 @@ export interface UseDraggableOptions<T>
   wrapper?: T
 }
 
-export function useDraggable<T extends Wrapper<void>>(
-  target: MaybeRef<Target>,
-  options?: UseDraggableOptions<T>
-): UseDraggableReturn
-
-export function useDraggable(
-  target: MaybeRef<Target>,
-  options?: UseDraggableOptions<{}>
-): UseDraggableReturn
-
-export function useDraggable<T extends Wrapper<any>>(
+export function useDraggable<T extends Wrapper<any, void>>(
   /**
    * event-started listener region - @default undefined
    */
@@ -244,6 +220,20 @@ function matchesTarget(target: Element, selectorOrElement: Target) {
     return target.matches(selectorOrElement)
   }
   return target === selectorOrElement
+}
+
+function getMousePotision(event: TouchyEvent): Position {
+  if ('touches' in event) {
+    const touch = event.touches[0]
+    return {
+      x: touch.pageX,
+      y: touch.pageY
+    }
+  }
+  return {
+    x: event.pageX,
+    y: event.pageY
+  }
 }
 
 export default useDraggable

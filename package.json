@@ -1,6 +1,6 @@
 {
   "name": "@reasoning/use-draggable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Vue hook that combines some common logic for dragging.",
   "license": "MIT",
   "keywords": [
@@ -30,16 +30,16 @@
       "import": "./dist/wrappers.mjs",
       "require": "./dist/wrappers.cjs"
     },
-    "./createMouseMoveActionsApi": {
-      "import": "./dist/createMouseMoveActionsApi.mjs",
-      "require": "./dist/createMouseMoveActionsApi.cjs"
+    "./utils": {
+      "import": "./dist/utils.mjs",
+      "require": "./dist/utils.cjs"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "tsc -p . & rollup -c",
     "test": "vitest run",
     "release": "npm run build & npm publish"
   },
