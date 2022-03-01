@@ -2,14 +2,14 @@
 
 A Vue hook that combines some common logic for dragging.
 
-[![npm version](https://badge.fury.io/js/@nooooooom%2Fuse-draggable.svg)](https://badge.fury.io/js/@nooooooom%2Fuse-draggable)
+[![npm version](https://badge.fury.io/js/@moon%2Fuse-draggable.svg)](https://badge.fury.io/js/@moon%2Fuse-draggable)
 
 ## Install
 
 ```sh
-yarn add @nooooooom/use-draggable --dev
+yarn add @moon/use-draggable --dev
 # or
-pnpm install @nooooooom/use-draggable --save-dev
+pnpm install @moon/use-draggable --save-dev
 ```
 
 ## Options
@@ -57,7 +57,7 @@ Basic drag.
 </details>
 
 ```ts
-import { useDraggable } from '@nooooooom/use-draggable'
+import { useDraggable } from '@moon/use-draggable'
 
 const boxEl = document.querySelector('#box')
 
@@ -81,7 +81,7 @@ useDraggable(boxEl, {
 For example, I want to put some constraints on the position of dragging:
 
 ```ts
-import { useDraggable } from '@nooooooom/use-draggable'
+import { useDraggable } from '@moon/use-draggable'
 
 const boxEl = document.querySelector('#box')
 
@@ -121,7 +121,8 @@ So you can extract the core core logic and reuse it elsewhere.
 Some options of `rotateWrapper` can be found in the [source code](https://github.com/nooooooom/use-draggable/blob/main/src/wrappers/rotate.ts).
 
 ```ts
-import { useDraggable, rotateWrapper } from '@nooooooom/use-draggable'
+import { useDraggable } from '@moon/use-draggable'
+import { rotateWrapper } from '@moon/use-draggable/wrappers'
 
 const boxEl = document.querySelector('#box')
 
