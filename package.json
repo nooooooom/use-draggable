@@ -1,6 +1,6 @@
 {
   "name": "@reasoning/use-draggable",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A Vue hook that combines some common logic for dragging.",
   "license": "MIT",
   "keywords": [

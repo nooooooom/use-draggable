@@ -11,6 +11,8 @@ import type {
 
 export type MaybeRef<T> = T | Ref<T>
 
+export type ReturnType<T> = T extends (...args: any[]) => infer R ? R : void
+
 export interface Position {
   x: number
   y: number
@@ -23,15 +25,27 @@ export interface MoveActionPosition extends Position {
   diff: Position
 }
 
-export interface MouseMoveActions<P = unknown, T = unknown> {
-  onStart?: (event: TouchyEvent, position: MoveActionPosition, params: P) => T
-  onMove?: (event: TouchyEvent, position: MoveActionPosition, params: P) => T
-  onEnd?: (event: TouchyEvent, position: MoveActionPosition, params: P) => T
-}
+export type MouseMoveActionHooks = 'onStart' | 'onMove' | 'onEnd'
+
+export type MouseMoveActions<P = unknown, T = unknown> = Partial<
+  Record<
+    MouseMoveActionHooks,
+    (event: TouchyEvent, position: MoveActionPosition, params: P) => T
+  >
+>
 
 export interface Wrapper<T = any, P = any> extends MouseMoveActions<P, T> {}
+// `Wrapper` is too strict，this will frustrate functions without parameters
+export type WrapperLike = Partial<
+  Record<MouseMoveActionHooks, (...args: any[]) => any>
+>
 
-export type ExtractWrapped<T> = T extends Wrapper<infer T> ? T : never
+export type ExtractWrapped<T> = T extends Wrapper<infer R>
+  ? R
+  : T extends WrapperLike
+  ? // TODO Maybe I should support hooks with more return types
+    ReturnType<WrapperLike[MouseMoveActionHooks]>
+  : never
 
 export type Target = string /** Selector */ | DragStartTarget
 

@@ -1,5 +1,9 @@
 import type { ExtractWrapped, Wrapper } from '../../index'
-import type { MouseMoveActions } from '../useDraggable'
+import type {
+  MouseMoveActionHooks,
+  MouseMoveActions,
+  WrapperLike
+} from '../useDraggable'
 
 export type WrapperMiddlewares<T> = T extends [Wrapper]
   ? [Wrapper]
@@ -20,25 +24,27 @@ export type ExtractLastElement<Elements> = Elements extends [infer Element]
   ? ExtractLastElement<Laters>
   : never
 
-export type MergeWrappers<Wrappers> = Wrappers extends Wrapper[]
-  ? MergeWrappers<ExtractLastElement<Wrappers>>
-  : never
+export type MergeWrappersReturn<T, U = Wrapper | WrapperLike> = T extends U
+  ? Wrapper<ExtractWrapped<T>, void>
+  : T extends U[]
+  ? MergeWrappersReturn<ExtractLastElement<T>>
+  : Wrapper<void, void>
 
-type HookName = keyof Wrapper
-
-const mergeHookNames: Array<HookName> = ['onStart', 'onMove', 'onEnd']
+const mergeHookNames: MouseMoveActionHooks[] = ['onStart', 'onMove', 'onEnd']
 
 export function mergeWrappers(): void
-export function mergeWrappers<W1 extends Wrapper>(wrappers1: W1): W1
+export function mergeWrappers<W1 extends Wrapper>(
+  wrappers1: W1
+): MergeWrappersReturn<W1>
 export function mergeWrappers<
   W1 extends Wrapper,
   W2 extends Wrapper<any, ExtractWrapped<W1>>
->(wrappers1: W1, wrappers2: W2): MergeWrappers<[W1, W2]>
+>(wrappers1: W1, wrappers2: W2): MergeWrappersReturn<W2>
 export function mergeWrappers<
   W1 extends Wrapper,
   W2 extends Wrapper<any, ExtractWrapped<W1>>,
   W3 extends Wrapper<any, ExtractWrapped<W2>>
->(wrappers1: W1, wrappers2: W2, wrappers3: W3): MergeWrappers<[W1, W2, W3]>
+>(wrappers1: W1, wrappers2: W2, wrappers3: W3): MergeWrappersReturn<W3>
 export function mergeWrappers<
   W1 extends Wrapper,
   W2 extends Wrapper<any, ExtractWrapped<W1>>,
@@ -49,7 +55,7 @@ export function mergeWrappers<
   wrappers2: W2,
   wrappers3: W3,
   wrappers4: W4
-): MergeWrappers<[W1, W2, W3, W4]>
+): MergeWrappersReturn<W4>
 export function mergeWrappers<
   W1 extends Wrapper,
   W2 extends Wrapper<any, ExtractWrapped<W1>>,
@@ -62,20 +68,23 @@ export function mergeWrappers<
   wrappers3: W3,
   wrappers4: W4,
   wrappers5: W5
-): MergeWrappers<[W1, W2, W3, W4, W5]>
-export function mergeWrappers<Wrappers extends WrapperMiddlewares<Wrapper[]>>(
-  ...wrappers: Wrappers
-) {
+): MergeWrappersReturn<W5>
+export function mergeWrappers<
+  Wrappers extends WrapperMiddlewares<Array<Wrapper | WrapperLike>>
+>(...wrappers: Wrappers): MergeWrappersReturn<Wrappers>
+export function mergeWrappers<
+  Wrappers extends WrapperMiddlewares<Array<Wrapper | WrapperLike>>
+>(...wrappers: Wrappers) {
   if (!wrappers.length) {
     return
   }
 
-  const departure = <T extends HookName>(
+  const departure = <T extends MouseMoveActionHooks>(
     hookName: T,
     ...args: Parameters<Required<MouseMoveActions<void>>[T]>
   ) =>
     wrappers.reduce((perviousReturn: any, wrapper) =>
-      wrapper[hookName]?.apply(null, args.concat(perviousReturn) as any)
+      wrapper[hookName]?.apply.(null, args.concat(perviousReturn) as any)
     )
 
   return mergeHookNames.reduce<Wrapper<any>>((wrapper, hookName) => {
