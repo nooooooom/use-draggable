@@ -84,7 +84,7 @@ export function mergeWrappers<
     ...args: Parameters<Required<MouseMoveActions<void>>[T]>
   ) =>
     wrappers.reduce((perviousReturn: any, wrapper) =>
-      wrapper[hookName]?.apply.(null, args.concat(perviousReturn) as any)
+      wrapper[hookName]?.apply(null, args.concat(perviousReturn) as any)
     )
 
   return mergeHookNames.reduce<Wrapper<any>>((wrapper, hookName) => {
