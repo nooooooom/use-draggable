@@ -7,32 +7,50 @@ function getRadiansBetween(p: Position, q: Position) {
   return Math.atan2(p.y - q.y, p.x - q.x)
 }
 
+function normalizeDegrees(degrees: number) {
+  return Math.floor(degrees < 0 ? degrees + 360 : degrees)
+}
+
 export function rotateWrapper(
-  center: MaybeRef<Position>,
-  interval: MaybeRef<number> = 1
+  centerRef: MaybeRef<Position>,
+  intervalRef: MaybeRef<number> = 1
 ): Wrapper<number> {
-  let initRadians: number
+  let initInterval: number | undefined
+  let initRotationInDegrees: number
+  let startRotationInDegrees: number
+  let lastIncrementDegrees: number
 
-  const getIncrementAngle = (position: Position) => {
-    const rawCenter = unref(center)
-    const rawInterval = unref(interval)
+  const getIncrementDegrees = (position: Position) => {
+    const center = unref(centerRef)
+    const interval = unref(intervalRef)
+    // When the interval changes,
+    // use the last radians as a new anchor to reset the processing logic of interval
+    if (initInterval !== interval) {
+      initInterval = interval
+      initRotationInDegrees = lastIncrementDegrees
+    }
 
-    const currentRadians = getRadiansBetween(position, rawCenter)
-    const diffAngle = (currentRadians - initRadians) * PER_RADIANS
-
-    const incrementAngle = Math.floor(diffAngle / rawInterval) * rawInterval
-
-    return Math.floor(
-      incrementAngle < 0 ? incrementAngle + 360 : incrementAngle
+    const newRotationInDegrees = normalizeDegrees(
+      getRadiansBetween(position, center) * PER_RADIANS
     )
+    const degreesDiff = newRotationInDegrees - initRotationInDegrees
+    const incrementDegreesDiff = Math.floor(degreesDiff / interval) * interval
+    const newIncrementDegrees = initRotationInDegrees + incrementDegreesDiff
+
+    lastIncrementDegrees = newIncrementDegrees
+
+    return newIncrementDegrees - startRotationInDegrees
   }
 
   return {
     onStart: (event, position) => {
-      initRadians = getRadiansBetween(position, unref(center))
+      startRotationInDegrees = initRotationInDegrees = normalizeDegrees(
+        getRadiansBetween(position, unref(centerRef)) * PER_RADIANS
+      )
+      lastIncrementDegrees = 0
       return 0
     },
-    onMove: (event, position) => getIncrementAngle(position),
-    onEnd: (event, position) => getIncrementAngle(position)
+    onMove: (event, position) => getIncrementDegrees(position),
+    onEnd: (event, position) => getIncrementDegrees(position)
   }
 }
