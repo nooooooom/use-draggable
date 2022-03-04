@@ -12,8 +12,8 @@ function normalizeDegrees(degrees: number) {
 }
 
 export function rotateWrapper(
-  centerRef: MaybeRef<Position>,
-  intervalRef: MaybeRef<number> = 1
+  center: MaybeRef<Position>,
+  interval: MaybeRef<number> = 1
 ): Wrapper<number> {
   let initInterval: number | undefined
   let initRotationInDegrees: number
@@ -21,20 +21,21 @@ export function rotateWrapper(
   let lastIncrementDegrees: number
 
   const getIncrementDegrees = (position: Position) => {
-    const center = unref(centerRef)
-    const interval = unref(intervalRef)
+    const rawCenter = unref(center)
+    const rawInterval = unref(interval)
     // When the interval changes,
     // use the last radians as a new anchor to reset the processing logic of interval
     if (initInterval !== interval) {
-      initInterval = interval
+      initInterval = rawInterval
       initRotationInDegrees = lastIncrementDegrees
     }
 
     const newRotationInDegrees = normalizeDegrees(
-      getRadiansBetween(position, center) * PER_RADIANS
+      getRadiansBetween(position, rawCenter) * PER_RADIANS
     )
     const degreesDiff = newRotationInDegrees - initRotationInDegrees
-    const incrementDegreesDiff = Math.floor(degreesDiff / interval) * interval
+    const incrementDegreesDiff =
+      Math.floor(degreesDiff / rawInterval) * rawInterval
     const newIncrementDegrees = initRotationInDegrees + incrementDegreesDiff
 
     lastIncrementDegrees = newIncrementDegrees
@@ -45,7 +46,7 @@ export function rotateWrapper(
   return {
     onStart: (event, position) => {
       startRotationInDegrees = initRotationInDegrees = normalizeDegrees(
-        getRadiansBetween(position, unref(centerRef)) * PER_RADIANS
+        getRadiansBetween(position, unref(center)) * PER_RADIANS
       )
       lastIncrementDegrees = 0
       return 0
