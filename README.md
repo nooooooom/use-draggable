@@ -76,9 +76,11 @@ useDraggable(boxEl, {
 })
 ```
 
+### Use wrapper
+
 `use-draggable` has a very interesting property - `wrapper` , which may be needed when you need to do some kind of calculation on mouse position, It is intended to separate your code logic.
 
-For example, I want to put some constraints on the position of dragging:
+For example, I want to put some constraints on the position of dragging
 
 ```ts
 import { useDraggable } from '@reasoning/use-draggable'
@@ -144,6 +146,38 @@ useDraggable(boxEl, {
 ```
 
 Separating the logic of operations can help us better troubleshoot problems in our code, because in most cases we are just repeatedly calling some operation functions and then using their operation results.
+
+### Merge wrappers
+
+If you need to combine multiple wrappers, use-draggable provides a utility function called `mergeWrapper` for this purpose, which will pass the return value of the `wrapper` you pass in in turn from left to right, each ` wrapper` can accept the return value from the previous `wrapper`, for example
+
+```ts
+import { useDraggable } from '@reasoning/use-draggable'
+import { rotateWrapper } from '@reasoning/use-draggable/wrappers'
+import { mergeWrappers } from '@reasoning/use-draggable/utils'
+
+const boxEl = document.querySelector('#box')
+
+let currentAngle = 0
+
+useDraggable(boxEl, {
+  wrapper: mergeWrappers(rotateWrapper({ x: 50, y: 50 }), {
+    onMove: (event, position, incrementAngle) => {
+      return {
+        transform: `rotateZ(${currentAngle + incrementAngle}deg)`
+      }
+    },
+    onEnd: (event, position, incrementAngle) => {
+      currentAngle += incrementAngle
+    }
+  }),
+  onMove: (event, position, style) => {
+    boxEl.style = style
+  }
+})
+```
+
+This may have some benefits for code splitting, at least for me they are helpful.
 
 ## Feature
 

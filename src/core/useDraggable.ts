@@ -195,10 +195,12 @@ export function useDraggable<T extends Wrapper<any, void>>(
     [targetRef, () => unref(draggingTarget)],
     ([target, draggingTarget]) => {
       mouseMoveActionsApi?.unsetup()
-      mouseMoveActionsApi = setupMouseMoveAction(
-        normalizeTarget(target),
-        draggingTarget
-      )
+      if (target) {
+        mouseMoveActionsApi = setupMouseMoveAction(
+          normalizeTarget(target),
+          draggingTarget
+        )
+      }
     },
     {
       immediate: true,
