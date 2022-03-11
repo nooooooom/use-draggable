@@ -26,23 +26,23 @@ const mouse = {
   start: 'mousedown',
   end: 'mouseup',
   move: 'mousemove'
-}
+} as const
 
 const touch = {
   start: 'touchstart',
   end: 'touchend',
   move: 'touchmove'
-}
+} as const
 
-const pointers = {
+const pointer = {
   start: 'pointerdown',
   end: 'pointerup',
   move: 'pointermove'
-}
+} as const
 
 function getMoveEvents() {
   // @ts-expect-error
-  return window.navigator.pointerEnabled ? [pointers] : [mouse, touch]
+  return window.navigator.pointerEnabled ? [pointer] : [mouse, touch]
 }
 
 export interface MouseMoveActionsApi {
@@ -101,30 +101,35 @@ export function createMouseMoveActionsApi(
       return emptyMouseMoveActionApi
     }
 
-    const draggingElement = draggingTarget ?? getDefaultWindow(target)
+    // To make the event type accurate
+    const draggingArea = (draggingTarget ||
+      getDefaultWindow(target)) as HTMLElement
 
     Events.forEach((evet) =>
-      target.addEventListener(evet.start, onPointerDown as any)
+      (target as HTMLElement).addEventListener(evet.start, onPointerDown)
     )
 
     return {
       unsetup: () => {
         Events.forEach((evet) => {
-          target.removeEventListener(evet.start, onPointerDown as any)
-          draggingElement.removeEventListener(evet.move, onPointerMove as any)
-          draggingElement.removeEventListener(evet.end, onPointerMove as any)
+          ;(target as HTMLElement).removeEventListener(
+            evet.start,
+            onPointerDown
+          )
+          draggingArea.removeEventListener(evet.move, onPointerMove)
+          draggingArea.removeEventListener(evet.end, onPointerMove)
         })
       },
       registerMoveEvent: () => {
         Events.forEach((evet) => {
-          draggingElement.addEventListener(evet.move, onPointerMove as any)
-          draggingElement.addEventListener(evet.end, onPointerUp as any)
+          draggingArea.addEventListener(evet.move, onPointerMove)
+          draggingArea.addEventListener(evet.end, onPointerUp)
         })
       },
       turnOffMoveEvents: () => {
         Events.forEach((evet) => {
-          draggingElement.removeEventListener(evet.move, onPointerMove as any)
-          draggingElement.removeEventListener(evet.end, onPointerMove as any)
+          draggingArea.removeEventListener(evet.move, onPointerMove)
+          draggingArea.removeEventListener(evet.end, onPointerMove)
         })
       }
     }
@@ -133,7 +138,7 @@ export function createMouseMoveActionsApi(
   return setup
 }
 
-function getDefaultWindow(target: any) {
+function getDefaultWindow(target: any): Window {
   if (!target) {
     return window
   }
